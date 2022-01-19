@@ -25,6 +25,8 @@ classdef CellChecker
             TS.states = uStates;
             TS.entranceTime = t_enter;
             TS.exitTime = t_exit;
+            TS.X = X_cell;
+            TS.Y = Y_cell;
         end
         
         function dG = createDigraph(states)
@@ -35,39 +37,48 @@ classdef CellChecker
             dG = digraph(states(1:(idx-1)), states(2:idx));
         end
         
-        function dG = mergeDigraphs(dG, dG2Addd)
+        function dG = mergeDigraphs(dG, dG2Add)
         % Merge two digraphs
             
-            newNodes = setdiff(dG2Addd.Nodes, dG.Nodes);
-            [~, id_newEdges] = setdiff(cell2mat(dG2Addd.Edges.EndNodes), cell2mat(dG.Edges.EndNodes), 'rows');
-            newEdges = dG2Addd.Edges.EndNodes(id_newEdges, :);
+            if isempty(dG)
+                dG = dG2Add;
+                return
+            end
+        
+            newNodes = setdiff(dG2Add.Nodes, dG.Nodes);
+            [~, id_newEdges] = setdiff(cell2mat(dG2Add.Edges.EndNodes), cell2mat(dG.Edges.EndNodes), 'rows');
+            newEdges = dG2Add.Edges.EndNodes(id_newEdges, :);
             
             dG = addnode(dG, newNodes);
             dG = addedge(dG, newEdges(:, 1), newEdges(:, 2));
         end
         
-        function isSafe = isSafeTransitions(TS1, TS2)
+        function [isSafe, unsafeStates] = isSafeTransitions(TS1, TS2)
         % Check whether two transition systems are safe against each other
             
             isSafe = true;
+            unsafeStates = [];
             
             [overlappingStates, id_overlapping_TS1, id_overlapping_TS2] = intersect(TS1.states, TS2.states);
             
             if ~isempty(overlappingStates)
-                isSafe_temporal = CellChecker.isSafeTemporalDiff(TS1, TS2, id_overlapping_TS1, id_overlapping_TS2);
-                
-                if ~isSafe_temporal
-                    isSafe = false;
-                end
+                [isSafe, unsafeStates] = CellChecker.isSafeTemporalDiff(TS1, TS2, id_overlapping_TS1, id_overlapping_TS2);
             end
         end
 
-        function isSafe = isSafeTemporalDiff(TS1, TS2, id_TS1, id_TS2)
+        function [isSafe, unsafeStates] = isSafeTemporalDiff(TS1, TS2, id_state2check_TS1, id_state2check_TS2)
         % Check whether the temporal difference between relevant equal states of  
         % two transition systems are safe against each other
             
-            isSafe = all((TS1.entranceTime(id_TS1) > TS2.exitTime(id_TS2))) || ...% Enter after other has left ...OR... 
-                     all((TS1.exitTime(id_TS1) < TS2.exitTime(id_TS2))); % Exit before other has entered
+            unsafeStates = [];
+            isSafeEntranceTime = TS1.entranceTime(id_state2check_TS1) > TS2.exitTime(id_state2check_TS2); % Enter after other has left ...OR... 
+            isSafeExitTime = TS1.exitTime(id_state2check_TS1) < TS2.entranceTime(id_state2check_TS2); % Exit before other has entered
+            isSafe = all(isSafeEntranceTime | isSafeExitTime); 
+                 
+            if ~isSafe
+                isUnsafeState = ~isSafeEntranceTime & ~isSafeExitTime;
+                unsafeStates = TS1.states(id_state2check_TS1(isUnsafeState));
+            end
         end
     end
 end
