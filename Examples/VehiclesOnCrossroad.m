@@ -1,5 +1,7 @@
 % Pairs of directions that are crossing at the crossroad ("ne" means
 % Nort-East)
+clear all
+
 crossingPaths = ["ne", "ew";
                  "ne", "wn";
                  "ne", "es";
@@ -33,9 +35,9 @@ crossingPaths = ["ne", "ew";
 % 1 vehicle
 %dirs = ["ew"];
 % 2 vehicle
-%dirs = ["ew","wn"];
+dirs = ["ew","wn"];
 % 3 vehicle
-dirs = ["ew","wn","nw"];
+%dirs = ["ew","wn","nw"];
 % 4 vehicle
 %dirs = ["ew","wn","nw","se"];
 % 5 vehicle

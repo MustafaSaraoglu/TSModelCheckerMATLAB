@@ -40,6 +40,11 @@ classdef TransitionSystem < handle
             end
                     
             % Digraph
+            % Add initial state "0" and an edge to "ii...i" with label
+            % "true"
+            obj.states = ["0" obj.states];
+            obj.labels = ["0" "0"; obj.labels];
+            obj.transitions = ["0" obj.transitions(1) "true"; obj.transitions];
             % table with all states
             NodeTable = table(obj.states', obj.labels(:,2),'VariableNames',{'Name' 'Label'});
             % table with all edges (transitions) and labled with actions
